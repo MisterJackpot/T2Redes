@@ -11,4 +11,15 @@ public class Header implements Serializable {
         this.hostDestination = hostDestination;
         this.fileName = fileName;
     }
+
+    @Override
+    public String toString() {
+        return "Header{" +
+                "portOrigin=" + portOrigin +
+                ", portDestination=" + portDestination +
+                ", hostOrigin='" + hostOrigin + '\'' +
+                ", hostDestination='" + hostDestination + '\'' +
+                ", fileName='" + fileName + '\'' +
+                '}';
+    }
 }

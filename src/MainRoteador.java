@@ -33,6 +33,13 @@ public class MainRoteador {
 
         System.out.println("Rodando na porta: " + datagramSocket.getLocalPort());
 
+        inServer();
+
+        outServer();
+
+    }
+
+    public static void inServer(){
         new Thread(() -> {
             do {
                 byte[] receiveData = new byte[1024];
@@ -53,6 +60,7 @@ public class MainRoteador {
                         try (FileOutputStream stream = new FileOutputStream("OutFiles/" + header.fileName)) {
                             stream.write(fileContent);
                         }
+                        System.out.println(header.toString());
                     } catch (ClassNotFoundException e) {
                         e.printStackTrace();
                     } finally {
@@ -68,7 +76,9 @@ public class MainRoteador {
                 }
             }while (true);
         }).start();
+    }
 
+    public static void outServer(){
         new Thread(() -> {
             do {
                 try {
@@ -88,7 +98,7 @@ public class MainRoteador {
 
                     byte[] sendData = new byte[1024];
 
-                    System.out.println("Digite o texto a ser enviado ao servidor: ");
+                    System.out.println("Digite o nome do arquivo: ");
                     String sentence = inFromUser.readLine();
                     sendData = sentence.getBytes();
 
@@ -97,8 +107,8 @@ public class MainRoteador {
                     ByteArrayOutputStream bos = new ByteArrayOutputStream();
                     ObjectOutput out = null;
                     byte[] yourBytes = null;
-                    File file = new File("In/Opa");
-                    Header header = new Header(datagramSocket.getLocalPort(),iPorta,inetAddress.getHostAddress(),IPAddress.getHostAddress(),"Opa");
+                    File file = new File("In/" + sentence);
+                    Header header = new Header(datagramSocket.getLocalPort(),iPorta,inetAddress.getHostAddress(),IPAddress.getHostAddress(),sentence);
                     byte[] fileContent = Files.readAllBytes(file.toPath());
                     try {
                         out = new ObjectOutputStream(bos);
@@ -113,10 +123,13 @@ public class MainRoteador {
                             // ignore close exception
                         }
                     }
-                    DatagramPacket sendPacket = new DatagramPacket(yourBytes,
-                            yourBytes.length, IPAddress, iPorta);
+                    DatagramPacket sendPacket;
                     if(IPAddress.isAnyLocalAddress() || IPAddress.isLoopbackAddress()){
-                        System.out.println("Mesma Rede");
+                        sendPacket = new DatagramPacket(yourBytes,
+                                yourBytes.length, IPAddress, iPorta);
+                    }else{
+                        sendPacket = new DatagramPacket(yourBytes,
+                                yourBytes.length, inetAddress, 3000);
                     }
                     clientSocket.send(sendPacket);
 
@@ -126,8 +139,5 @@ public class MainRoteador {
                 }
             }while (true);
         }).start();
-
-
-
     }
 }
