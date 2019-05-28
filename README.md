@@ -2,10 +2,17 @@
 - O objetivo do trabalho visa implementar um programa que faça a transferência de arquivos
 através de uma rede simulada. Para a transferência funcionar, será preciso implementar uma
 aplicação, que rode em cima de UDP e faça o roteamento dos pacotes entre os hosts.
+
+![img1](https://user-images.githubusercontent.com/13707509/58443311-9c431500-80c7-11e9-9d08-45fd43635233.png)
+
+
 - Uma máquina poderá ter vários processos de transferência de arquivos, onde cada processo
 será considerado uma máquina diferente na rede simulada. Quando um arquivo precisar ser
 entregue para uma outra rede, ela precisará ser enviado para o processo que faz o papel de roteador
 e este deverá enviar o pacote para a outra máquina.
+
+![img2](https://user-images.githubusercontent.com/13707509/58443352-c4cb0f00-80c7-11e9-9f21-78e1e9d14231.png)
+
 
 # Rede Ethernet
 - O endereço das máquinas da rede simulada deve corresponder a um par <IP,Porta>. Nesse
