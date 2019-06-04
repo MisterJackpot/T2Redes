@@ -59,12 +59,13 @@ public class MainRoteador {
                         header = (Header) in.readObject();
                         fileContent = (byte[]) in.readObject();
                         InetAddress inetAddress = InetAddress.getLocalHost();
-                        if(header.portDestination == 3000 || (inetAddress.getHostAddress().toString().equalsIgnoreCase(header.hostDestination) && header.portDestination == datagramSocket.getLocalPort()) ) {
+                        if((inetAddress.getHostAddress().equalsIgnoreCase(header.hostDestination) && header.portDestination == datagramSocket.getLocalPort()) ) {
                             try (FileOutputStream stream = new FileOutputStream("OutFiles/" + header.fileName)) {
                                 stream.write(fileContent);
                             }
                             System.out.println(header.toString());
                         }else{
+                            System.out.println("Roteando:\n" + header.toString());
                             ByteArrayOutputStream bos = new ByteArrayOutputStream();
                             ObjectOutput out = null;
                             byte[] yourBytes = null;
@@ -84,10 +85,17 @@ public class MainRoteador {
 
                             DatagramSocket clientSocket = new DatagramSocket();
                             InetAddress IPAddress = InetAddress.getByName(header.hostDestination);
-                            DatagramPacket sendPacket;
-                                sendPacket = new DatagramPacket(yourBytes,
-                                        yourBytes.length, IPAddress, header.portDestination);
+                            DatagramPacket sendPacket = null;
+                            if(porta.equals("3000")){
+                                if(inetAddress.getHostAddress().equalsIgnoreCase(header.hostDestination)){
 
+                                    sendPacket = new DatagramPacket(yourBytes,
+                                            yourBytes.length, IPAddress, header.portDestination);
+                                }else{
+                                    sendPacket = new DatagramPacket(yourBytes,
+                                            yourBytes.length, IPAddress, 3000);
+                                }
+                            }
                             clientSocket.send(sendPacket);
 
                             clientSocket.close();
