@@ -79,7 +79,7 @@ public class MainRoteador {
                                 try {
                                     bos.close();
                                 } catch (IOException ex) {
-                                    // ignore close exception
+                                    System.out.println("ERRO");
                                 }
                             }
 
@@ -169,6 +169,9 @@ public class MainRoteador {
                     if(IPAddress.isAnyLocalAddress() || IPAddress.isLoopbackAddress()){
                         sendPacket = new DatagramPacket(yourBytes,
                                 yourBytes.length, IPAddress, iPorta);
+                    }else if(porta.equalsIgnoreCase("3000")){
+                        sendPacket = new DatagramPacket(yourBytes,
+                                yourBytes.length, IPAddress, 3000);
                     }else{
                         sendPacket = new DatagramPacket(yourBytes,
                                 yourBytes.length, inetAddress, 3000);
