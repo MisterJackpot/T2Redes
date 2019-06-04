@@ -10,13 +10,14 @@ import java.util.Scanner;
 
 public class MainRoteador {
     public static DatagramSocket datagramSocket;
+    public static String porta;
 
     public static void main(String args[]){
         System.out.println("Inicializando Roteador");
         Scanner sc1 = new Scanner(System.in);
 
         System.out.println("Digite a porta desejada: ");
-        String porta = sc1.next();
+        porta = sc1.next();
 
         if(porta.length() != 4 || !porta.matches("[0-9]+")){
             do {
@@ -57,10 +58,41 @@ public class MainRoteador {
                         in = new ObjectInputStream(bis);
                         header = (Header) in.readObject();
                         fileContent = (byte[]) in.readObject();
-                        try (FileOutputStream stream = new FileOutputStream("OutFiles/" + header.fileName)) {
-                            stream.write(fileContent);
+                        InetAddress inetAddress = InetAddress.getLocalHost();
+                        if(header.portDestination == 3000 || (inetAddress.getHostAddress().toString().equalsIgnoreCase(header.hostDestination) && header.portDestination == datagramSocket.getLocalPort()) ) {
+                            try (FileOutputStream stream = new FileOutputStream("OutFiles/" + header.fileName)) {
+                                stream.write(fileContent);
+                            }
+                            System.out.println(header.toString());
+                        }else{
+                            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                            ObjectOutput out = null;
+                            byte[] yourBytes = null;
+                            try {
+                                out = new ObjectOutputStream(bos);
+                                out.writeObject(header);
+                                out.writeObject(fileContent);
+                                out.flush();
+                                yourBytes = bos.toByteArray();
+                            } finally {
+                                try {
+                                    bos.close();
+                                } catch (IOException ex) {
+                                    // ignore close exception
+                                }
+                            }
+
+                            DatagramSocket clientSocket = new DatagramSocket();
+                            InetAddress IPAddress = InetAddress.getByName(header.hostDestination);
+                            DatagramPacket sendPacket;
+                                sendPacket = new DatagramPacket(yourBytes,
+                                        yourBytes.length, IPAddress, header.portDestination);
+
+                            clientSocket.send(sendPacket);
+
+                            clientSocket.close();
+
                         }
-                        System.out.println(header.toString());
                     } catch (ClassNotFoundException e) {
                         e.printStackTrace();
                     } finally {
@@ -104,12 +136,14 @@ public class MainRoteador {
 
                     InetAddress inetAddress = InetAddress.getLocalHost();
 
-                    ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                    ObjectOutput out = null;
                     byte[] yourBytes = null;
                     File file = new File("In/" + sentence);
                     Header header = new Header(datagramSocket.getLocalPort(),iPorta,inetAddress.getHostAddress(),IPAddress.getHostAddress(),sentence);
                     byte[] fileContent = Files.readAllBytes(file.toPath());
+
+                    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                    ObjectOutput out = null;
+
                     try {
                         out = new ObjectOutputStream(bos);
                         out.writeObject(header);
