@@ -11,12 +11,13 @@ import java.util.Scanner;
 public class MainRoteador {
     public static DatagramSocket datagramSocket;
     public static String porta;
+    public static boolean roteador;
 
     public static void main(String args[]){
         System.out.println("Inicializando Roteador");
         Scanner sc1 = new Scanner(System.in);
 
-        System.out.println("Digite a porta desejada: ");
+        System.out.println("Digite a porta desejada (3000 se este for o roteador): ");
         porta = sc1.next();
 
         if(porta.length() != 4 || !porta.matches("[0-9]+")){
@@ -25,6 +26,8 @@ public class MainRoteador {
                 porta = sc1.next();
             }while (porta.length() != 4 || !porta.matches("[0-9]+"));
         }
+
+        roteador = porta.equalsIgnoreCase("3000");
 
         try {
             datagramSocket = Roteador.getUDPSocket(porta);
@@ -64,7 +67,7 @@ public class MainRoteador {
                                 stream.write(fileContent);
                             }
                             System.out.println(header.toString());
-                        }else{
+                        }else if(roteador){
                             System.out.println("Roteando:\n" + header.toString());
                             ByteArrayOutputStream bos = new ByteArrayOutputStream();
                             ObjectOutput out = null;
@@ -101,6 +104,7 @@ public class MainRoteador {
                             clientSocket.close();
 
                         }
+                        else System.out.println("Ó MEU DEUS ALGO DEU MUITO ERRADO");
                     } catch (ClassNotFoundException e) {
                         e.printStackTrace();
                     } finally {
@@ -127,14 +131,17 @@ public class MainRoteador {
 
                     DatagramSocket clientSocket = new DatagramSocket();
 
-                    System.out.println("Digite o IP: ");
+                    System.out.println("Digite o IP de Destino: ");
                     String servidor = inFromUser.readLine();
 
-                    System.out.println("Digite a Porta: ");
+                    System.out.println("Digite a Porta de Destino: ");
                     String sPorta = inFromUser.readLine();
                     int iPorta = Integer.parseInt(sPorta);
 
                     InetAddress IPAddress = InetAddress.getByName(servidor);
+                    InetAddress IPAddressHeader = InetAddress.getByName(servidor);
+                    if (IPAddress.getHostAddress().equalsIgnoreCase(InetAddress.getLocalHost().getHostAddress())) IPAddress = InetAddress.getByName("localhost");
+                    if (IPAddress.getHostAddress().equalsIgnoreCase("127.0.0.1")) IPAddressHeader = InetAddress.getLocalHost();
 
                     byte[] sendData = new byte[1024];
 
@@ -146,7 +153,10 @@ public class MainRoteador {
 
                     byte[] yourBytes = null;
                     File file = new File("In/" + sentence);
-                    Header header = new Header(datagramSocket.getLocalPort(),iPorta,inetAddress.getHostAddress(),IPAddress.getHostAddress(),sentence);
+                    System.out.println("Enviado arquivo " + sentence + " para o destino " + IPAddressHeader.getHostAddress() + ":" + iPorta);
+                    Header header = new Header(datagramSocket.getLocalPort(),iPorta,inetAddress.getHostAddress(),IPAddressHeader.getHostAddress(),sentence);
+                    System.out.println("Header enviado: " + header.toString());
+
                     byte[] fileContent = Files.readAllBytes(file.toPath());
 
                     ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -170,9 +180,11 @@ public class MainRoteador {
                         sendPacket = new DatagramPacket(yourBytes,
                                 yourBytes.length, IPAddress, iPorta);
                     }else if(porta.equalsIgnoreCase("3000")){
+                        System.out.println("Enviando para roteamento");
                         sendPacket = new DatagramPacket(yourBytes,
                                 yourBytes.length, IPAddress, 3000);
                     }else{
+                        System.out.println("Enviando para roteamento");
                         sendPacket = new DatagramPacket(yourBytes,
                                 yourBytes.length, inetAddress, 3000);
                     }
