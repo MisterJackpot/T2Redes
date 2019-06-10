@@ -75,9 +75,6 @@ public class MainRoteador {
                             }
                         }
 
-                        if (achou){
-                            System.out.println("OPA PAPAI");
-                        }
                         if(achou && header.portDestination == datagramSocket.getLocalPort()) {
                             try (FileOutputStream stream = new FileOutputStream("OutFiles/" + header.fileName)) {
                                 stream.write(fileContent);
@@ -191,16 +188,33 @@ public class MainRoteador {
                             // ignore close exception
                         }
                     }
+
+                    boolean achou = false;
+                    Enumeration<NetworkInterface> nets = NetworkInterface.getNetworkInterfaces();
+                    InetAddress inetA = null;
+                    for (NetworkInterface nif: Collections.list(nets)) {
+                        Enumeration<InetAddress> e = nif.getInetAddresses();
+                        for (InetAddress inet:Collections.list(e)) {
+                            if(header.hostDestination.equalsIgnoreCase(inet.getHostAddress())){
+                                inetA = inet;
+                                achou = true;
+                                break;
+                            }
+                            if (achou) break;
+                        }
+                    }
+
                     DatagramPacket sendPacket;
-                    if(IPAddress.isAnyLocalAddress() || IPAddress.isLoopbackAddress()){
+                    if(achou){
                         sendPacket = new DatagramPacket(yourBytes,
-                                yourBytes.length, IPAddress, iPorta);
+                                yourBytes.length, inetA, iPorta);
                     }else if(porta.equalsIgnoreCase("3000")){
-                        System.out.println("Enviando para roteamento");
+                        System.out.println("Enviando para roteador");
+                        System.out.println(datagramSocket.getInetAddress().getHostAddress() + " -> " + IPAddress.getHostAddress());
                         sendPacket = new DatagramPacket(yourBytes,
                                 yourBytes.length, IPAddress, 3000);
                     }else{
-                        System.out.println("Enviando para roteamento");
+                        System.out.println("Enviando para roteador local");
                         sendPacket = new DatagramPacket(yourBytes,
                                 yourBytes.length, inetAddress, 3000);
                     }
