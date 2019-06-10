@@ -76,6 +76,7 @@ public class MainRoteador {
                         }
 
                         if(achou && header.portDestination == datagramSocket.getLocalPort()) {
+                            System.out.println("Arquivo " + header.fileName + " recebido");
                             try (FileOutputStream stream = new FileOutputStream("OutFiles/" + header.fileName)) {
                                 stream.write(fileContent);
                             }
@@ -104,10 +105,13 @@ public class MainRoteador {
                             DatagramPacket sendPacket = null;
                             if(porta.equals("3000")){
                                 if(achou){
-
+                                    System.out.println("Roteando:");
+                                    System.out.println("Porta " + porta + " -> Porta " + header.portDestination);
                                     sendPacket = new DatagramPacket(yourBytes,
                                             yourBytes.length, IPAddress, header.portDestination);
                                 }else{
+                                    System.out.println("Roteando:");
+                                    System.out.println(datagramSocket.getInetAddress().getHostAddress() + " -> " + IPAddress.getHostAddress());
                                     sendPacket = new DatagramPacket(yourBytes,
                                             yourBytes.length, IPAddress, 3000);
                                 }
