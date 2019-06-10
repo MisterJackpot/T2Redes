@@ -1,11 +1,10 @@
 import java.io.*;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.SocketException;
+import java.net.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
+import java.util.Enumeration;
 import java.util.Scanner;
 
 public class MainRoteador {
@@ -54,6 +53,7 @@ public class MainRoteador {
                     datagramSocket.receive(datagramPacket);
                     System.out.println("Datagrama UDP [" + numConn + "] recebido...");
                     ByteArrayInputStream bis = new ByteArrayInputStream(datagramPacket.getData());
+                    boolean achou = false;
                     ObjectInput in = null;
                     Header header;
                     byte[] fileContent;
@@ -61,8 +61,24 @@ public class MainRoteador {
                         in = new ObjectInputStream(bis);
                         header = (Header) in.readObject();
                         fileContent = (byte[]) in.readObject();
-                        InetAddress inetAddress = InetAddress.getLocalHost();
-                        if((inetAddress.getHostAddress().equalsIgnoreCase(header.hostDestination) && header.portDestination == datagramSocket.getLocalPort()) ) {
+                        Enumeration<NetworkInterface> nets = NetworkInterface.getNetworkInterfaces();
+                        InetAddress inetAddress;
+                        for (NetworkInterface nif: Collections.list(nets)) {
+                            Enumeration<InetAddress> e = nif.getInetAddresses();
+                            for (InetAddress inet:Collections.list(e)) {
+                                if(header.hostDestination.equalsIgnoreCase(inet.getHostAddress())){
+                                    inetAddress = inet;
+                                    achou = true;
+                                    break;
+                                }
+                                if (achou) break;
+                            }
+                        }
+
+                        if (achou){
+                            System.out.println("OPA PAPAI");
+                        }
+                        if(achou && header.portDestination == datagramSocket.getLocalPort()) {
                             try (FileOutputStream stream = new FileOutputStream("OutFiles/" + header.fileName)) {
                                 stream.write(fileContent);
                             }
@@ -90,7 +106,7 @@ public class MainRoteador {
                             InetAddress IPAddress = InetAddress.getByName(header.hostDestination);
                             DatagramPacket sendPacket = null;
                             if(porta.equals("3000")){
-                                if(inetAddress.getHostAddress().equalsIgnoreCase(header.hostDestination)){
+                                if(achou){
 
                                     sendPacket = new DatagramPacket(yourBytes,
                                             yourBytes.length, IPAddress, header.portDestination);
